@@ -248,12 +248,17 @@
         const MM_TO_INCH = 25.4;
 
         let screensData = {
-            '49 UH5F"': { width: 1077.6, height: 607.8, depth: 89.7, isCustom: false },
-            '55"': { width: 1212.2, height: 683.0, depth: 86.9, isCustom: false },
-            '75"': { width: 1682.4, height: 960.3, depth: 57.9, isCustom: false },
-            '86"': { width: 1926.2, height: 1097.2, depth: 60.6, isCustom: false },
-            '98"': { width: 2198, height: 1253, depth: 79.5, isCustom: false },
-            '110"': { width: 2474, height: 1408, depth: 99, isCustom: false }
+            '43 UL3J': { width: 967, height: 564, depth: 57.1, isCustom: false },
+                '50 UL3J': { width: 1128, height: 649, depth: 57.1, isCustom: false },
+                '55 UL3J': { width: 1244, height: 721, depth: 57.5, isCustom: false },
+                '65 UL3J': { width: 1457, height: 838, depth: 57.5, isCustom: false },
+                '75 UL3J': { width: 1683, height: 960, depth: 57.5, isCustom: false }
+                '49 UH5F"': { width: 1077.6, height: 607.8, depth: 89.7, isCustom: false },
+                '55 UH5F"': { width: 1212.2, height: 683.0, depth: 86.9, isCustom: false },
+                '75 UH5F"': { width: 1682.4, height: 960.3, depth: 57.9, isCustom: false },
+                '86"': { width: 1926.2, height: 1097.2, depth: 60.6, isCustom: false },
+                '98"': { width: 2198, height: 1253, depth: 79.5, isCustom: false },
+                '110"': { width: 2474, height: 1408, depth: 99, isCustom: false } }
         };
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -278,7 +283,11 @@
         function loadScreensFromLocalStorage() {
             const storedData = localStorage.getItem('allScreensData');
             const defaultScreens = {
-                '43 UL3J"': { width: 967, height: 564, depth: 57.1, isCustom: false },
+                '43 UL3J': { width: 967, height: 564, depth: 57.1, isCustom: false },
+                '50 UL3J': { width: 1128, height: 649, depth: 57.1, isCustom: false },
+                '55 UL3J': { width: 1244, height: 721, depth: 57.5, isCustom: false },
+                '65 UL3J': { width: 1457, height: 838, depth: 57.5, isCustom: false },
+                '75 UL3J': { width: 1683, height: 960, depth: 57.5, isCustom: false }
                 '49 UH5F"': { width: 1077.6, height: 607.8, depth: 89.7, isCustom: false },
                 '55 UH5F"': { width: 1212.2, height: 683.0, depth: 86.9, isCustom: false },
                 '75 UH5F"': { width: 1682.4, height: 960.3, depth: 57.9, isCustom: false },
