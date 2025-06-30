@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurador y Comparador de Pantallas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .panel {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            min-width: 300px;
+        }
+        h2 {
+            color: #0056b3;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        select, input[type="number"], input[type="text"], button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .grid-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .grid-controls label, .grid-controls select, .grid-controls input {
+            width: auto;
+            flex-grow: 1;
+            margin-bottom: 0;
+        }
+        .grid-controls span {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        #drawingArea {
+            border: 2px dashed #ccc;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #e9e9e9;
+            position: relative;
+            overflow: auto;
+            padding: 20px;
+            gap: 20px;
+        }
+        .drawing-wrapper {
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        .screen-group {
+            display: flex;
+            flex-wrap: wrap;
+            border: 1px solid black;
+            position: relative;
+            background-color: #f0f0f0;
+            padding: 0;
+            margin: 0;
+            box-sizing: content-box;
+        }
+        .screen-group.is-grid {
+            display: grid;
+        }
+        .screen {
+            background-color: #6c757d;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1em;
+            box-sizing: border-box;
+            border: 1px solid #343a40;
+            position: relative;
+        }
+        /* Eliminar estilos de etiquetas superpuestas */
+        /* .dimensions-label, .width-label, .height-label, .comparison-label ya no son necesarios en el CSS */
+        .comparison-result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e2f0cb;
+            border-left: 5px solid #8bc34a;
+            border-radius: 4px;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+        .info {
+            color: #007bff;
+            margin-top: 10px;
+        }
+        .comparison-screen-group {
+            border: 1px solid #ffc107;
+            background-color: rgba(255, 193, 7, 0.3);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .comparison-screen-group .screen {
+             background-color: #ffc107;
+             border: 1px solid #e0a800;
+             color: black;
+             font-weight: bold;
+        }
+        .target-measure-visual {
+            border: 2px dashed #007bff;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 0.9em;
+            color: #0056b3;
+            background-color: rgba(0, 123, 255, 0.1);
+        }
+        .target-visual-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px; /* Separación entre elementos en el wrapper */
+        }
+        .target-measure-text-label {
+            text-align: center;
+            margin-top: 5px;
+            font-weight: bold;
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="panel">
+            <h2>Gestionar Modelos de Pantalla</h2>
+            <label for="manageScreenModelSelect">Seleccionar Modelo:</label>
+            <select id="manageScreenModelSelect" onchange="loadScreenForEditing()">
+                <option value="">-- Seleccionar o Agregar Nuevo --</option>
+                </select>
+
+            <label for="editScreenName">Nombre de Pantalla:</label>
+            <input type="text" id="editScreenName" placeholder="Ej: Mi Pantalla Personalizada">
+
+            <label for="editScreenWidth">Ancho (mm):</label>
+            <input type="number" id="editScreenWidth" placeholder="Ej: 1500">
+
+            <label for="editScreenHeight">Alto (mm):</label>
+            <input type="number" id="editScreenHeight" placeholder="Ej: 800">
+
+            <button onclick="saveScreen()">Guardar/Agregar Pantalla</button>
+            <button onclick="deleteSelectedScreen()" id="deleteScreenBtn" style="background-color: #dc3545; display:none;">Eliminar Pantalla</button>
+            <div id="manageScreenMessage" class="info" style="display:none;"></div>
+        </div>
+
+        <div class="panel">
+            <h2>Configurar Pantallas Existentes</h2>
+            <label for="screenModel">Modelo de Pantalla:</label>
+            <select id="screenModel">
+                </select>
+
+            <div class="grid-controls">
+                <label for="rows">Filas:</label>
+                <input type="number" id="rows" value="1" min="1" max="10" style="width: 60px;">
+                <span>x</span>
+                <label for="cols">Columnas:</label>
+                <input type="number" id="cols" value="1" min="1" max="10" style="width: 60px;">
+            </div>
+
+            <label for="orientation">Orientación de Pantalla Individual:</label>
+            <select id="orientation">
+                <option value="horizontal">Horizontal</option>
+                <option value="vertical">Vertical</option>
+            </select>
+
+            <button onclick="drawConfiguration()">Dibujar Configuración</button>
+            <button onclick="clearDrawing()">Limpiar Dibujo</button>
+        </div>
+
+        <div class="panel">
+            <h2>Comparar con Medida</h2>
+            <label for="compareMeasureWidth">Ancho a Comparar (metros - m):</label>
+            <input type="number" id="compareMeasureWidth" step="0.001" placeholder="Ej: 2.198">
+
+            <label for="compareMeasureHeight">Alto a Comparar (metros - m):</label>
+            <input type="number" id="compareMeasureHeight" step="0.001" placeholder="Ej: 1.253">
+            
+            <label for="comparisonType">Tipo de Comparación:</label>
+            <select id="comparisonType">
+                <option value="all">Cualquier Configuración (Pantalla Única o Video Wall)</option>
+                <option value="single">Pantalla Única</option>
+                <option value="videowall">Video Wall (Matriz)</option>
+            </select>
+
+            <button onclick="compareConfigurations()">Comparar</button>
+            <div id="comparisonResult" class="comparison-result" style="display:none;"></div>
+            <div id="comparisonError" class="error" style="display:none;"></div>
+        </div>
+
+        <div class="panel" style="flex-grow: 2;">
+            <h2>Dibujo de la Configuración</h2>
+            <div id="drawingArea">
+                <p class="info">Selecciona una configuración y haz clic en "Dibujar".</p>
+            </div>
+            <div id="dimensionsDisplay" style="margin-top: 10px; font-weight: bold;"></div>
+        </div>
+    </div>
+
+    <script>
+        const MM_TO_INCH = 25.4;
+
+        let screensData = {
+            '49"': { width: 1077.6, height: 607.8, depth: 89.7, isCustom: false },
+            '55"': { width: 1212.2, height: 683.0, depth: 86.9, isCustom: false },
+            '75"': { width: 1682.4, height: 960.3, depth: 57.9, isCustom: false },
+            '86"': { width: 1926.2, height: 1097.2, depth: 60.6, isCustom: false },
+            '98"': { width: 2198, height: 1253, depth: 79.5, isCustom: false },
+            '110"': { width: 2474, height: 1408, depth: 99, isCustom: false }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadScreensFromLocalStorage();
+            populateManageScreenSelect();
+            populateScreenModelSelect();
+        });
+
+        function calculateDiagonal(width, height) {
+            return Math.sqrt(width * width + height * height);
+        }
+
+        function calculateInches(width, height) {
+            const diagonalMM = calculateDiagonal(width, height);
+            return diagonalMM / MM_TO_INCH;
+        }
+
+        function saveScreensToLocalStorage() {
+            localStorage.setItem('allScreensData', JSON.stringify(screensData));
+        }
+
+        function loadScreensFromLocalStorage() {
+            const storedData = localStorage.getItem('allScreensData');
+            const defaultScreens = {
+                '49"': { width: 1077.6, height: 607.8, depth: 89.7, isCustom: false },
+                '55"': { width: 1212.2, height: 683.0, depth: 86.9, isCustom: false },
+                '75"': { width: 1682.4, height: 960.3, depth: 57.9, isCustom: false },
+                '86"': { width: 1926.2, height: 1097.2, depth: 60.6, isCustom: false },
+                '98"': { width: 2198, height: 1253, depth: 79.5, isCustom: false },
+                '110"': { width: 2474, height: 1408, depth: 99, isCustom: false }
+            };
+
+            if (storedData) {
+                try {
+                    const parsedData = JSON.parse(storedData);
+                    screensData = { ...defaultScreens, ...parsedData };
+                } catch (e) {
+                    console.error("Error parsing stored data from localStorage:", e);
+                    screensData = defaultScreens;
+                }
+            } else {
+                screensData = defaultScreens;
+            }
+        }
+
+        function populateManageScreenSelect() {
+            const manageScreenModelSelect = document.getElementById('manageScreenModelSelect');
+            manageScreenModelSelect.innerHTML = '<option value="">-- Seleccionar o Agregar Nuevo --</option>';
+
+            const sortedKeys = Object.keys(screensData).sort((a, b) => {
+                const aIsCustom = screensData[a].isCustom;
+                const bIsCustom = screensData[b].isCustom;
+                if (aIsCustom && !bIsCustom) return 1;
+                if (!aIsCustom && bIsCustom) return -1;
+                return a.localeCompare(b);
+            });
+
+            sortedKeys.forEach(key => {
+                const screen = screensData[key];
+                const inches = calculateInches(screen.width, screen.height).toFixed(1);
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = `${key} (${inches}") ${screen.isCustom ? ' (Personalizada)' : ''}`;
+                manageScreenModelSelect.appendChild(option);
+            });
+
+            document.getElementById('deleteScreenBtn').style.display = 'none';
+        }
+
+        function populateScreenModelSelect() {
+            const screenModelSelect = document.getElementById('screenModel');
+            screenModelSelect.innerHTML = '';
+
+            const sortedKeys = Object.keys(screensData).sort((a, b) => {
+                const aIsCustom = screensData[a].isCustom;
+                const bIsCustom = screensData[b].isCustom;
+                if (aIsCustom && !bIsCustom) return 1;
+                if (!aIsCustom && bIsCustom) return -1;
+                return a.localeCompare(b);
+            });
+
+            sortedKeys.forEach(key => {
+                const screen = screensData[key];
+                const inches = calculateInches(screen.width, screen.height).toFixed(1);
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = `${key} (${inches}")`;
+                screenModelSelect.appendChild(option);
+            });
+        }
+
+        function loadScreenForEditing() {
+            const selectedModel = document.getElementById('manageScreenModelSelect').value;
+            const editScreenNameInput = document.getElementById('editScreenName');
+            const editScreenWidthInput = document.getElementById('editScreenWidth');
+            const editScreenHeightInput = document.getElementById('editScreenHeight');
+            const deleteScreenBtn = document.getElementById('deleteScreenBtn');
+            const messageDiv = document.getElementById('manageScreenMessage');
+
+            messageDiv.style.display = 'none';
+            editScreenNameInput.readOnly = false; // Por defecto editable
+
+            if (selectedModel && screensData[selectedModel]) {
+                const screen = screensData[selectedModel];
+                editScreenNameInput.value = selectedModel;
+                editScreenWidthInput.value = screen.width;
+                editScreenHeightInput.value = screen.height;
+                // Si la pantalla NO es personalizada, su nombre es de solo lectura.
+                if (!screen.isCustom) {
+                    editScreenNameInput.readOnly = true;
+                }
+                // Mostrar botón de eliminar solo para pantallas personalizadas
+                deleteScreenBtn.style.display = screen.isCustom ? 'block' : 'none';
+            } else {
+                // Limpiar campos para nueva entrada
+                editScreenNameInput.value = '';
+                editScreenWidthInput.value = '';
+                editScreenHeightInput.value = '';
+                deleteScreenBtn.style.display = 'none';
+            }
+        }
+
+        function saveScreen() {
+            const selectedModelInDropdown = document.getElementById('manageScreenModelSelect').value;
+            const newName = document.getElementById('editScreenName').value.trim();
+            const width = parseFloat(document.getElementById('editScreenWidth').value);
+            const height = parseFloat(document.getElementById('editScreenHeight').value);
+            const messageDiv = document.getElementById('manageScreenMessage');
+
+            messageDiv.style.display = 'none';
+            messageDiv.className = 'info';
+
+            if (!newName || isNaN(width) || width <= 0 || isNaN(height) || height <= 0) {
+                messageDiv.textContent = 'Por favor, rellena todos los campos con valores válidos y positivos.';
+                messageDiv.className = 'error';
+                messageDiv.style.display = 'block';
+                return;
+            }
+
+            // Caso 1: Editando una pantalla existente (predefinida o personalizada)
+            if (selectedModelInDropdown && screensData[selectedModelInDropdown]) {
+                const currentScreen = screensData[selectedModelInDropdown];
+
+                // Si se está intentando cambiar el nombre de una pantalla predefinida
+                if (!currentScreen.isCustom && selectedModelInDropdown !== newName) {
+                    messageDiv.textContent = 'No se puede cambiar el nombre de una pantalla predefinida. Para un modelo similar, crea una nueva.';
+                    messageDiv.className = 'error';
+                    messageDiv.style.display = 'block';
+                    return;
+                }
+
+                // Si se está cambiando el nombre de una pantalla personalizada
+                if (currentScreen.isCustom && selectedModelInDropdown !== newName) {
+                    if (screensData[newName]) { // Si el nuevo nombre ya existe
+                        messageDiv.textContent = `Ya existe una pantalla con el nombre "${newName}".`;
+                        messageDiv.className = 'error';
+                        messageDiv.style.display = 'block';
+                        return;
+                    }
+                    delete screensData[selectedModelInDropdown]; // Eliminar la entrada antigua
+                }
+                
+                // Guardar/actualizar la pantalla con el (nuevo) nombre
+                screensData[newName] = {
+                    width: width,
+                    height: height,
+                    depth: currentScreen.depth || 0,
+                    isCustom: currentScreen.isCustom || true
+                };
+
+            } else { // Caso 2: Agregando una nueva pantalla
+                if (screensData[newName]) { // Si el nombre ya existe
+                    messageDiv.textContent = `Ya existe una pantalla con el nombre "${newName}". Por favor, edítala o elige otro nombre.`;
+                    messageDiv.className = 'error';
+                    messageDiv.style.display = 'block';
+                    return;
+                }
+                screensData[newName] = {
+                    width: width,
+                    height: height,
+                    depth: 0,
+                    isCustom: true
+                };
+            }
+
+            saveScreensToLocalStorage();
+            populateManageScreenSelect();
+            populateScreenModelSelect();
+            messageDiv.textContent = `Pantalla "${newName}" guardada exitosamente.`;
+            messageDiv.style.display = 'block';
+
+            document.getElementById('manageScreenModelSelect').value = newName;
+            loadScreenForEditing();
+        }
+
+        function deleteSelectedScreen() {
+            const selectedModel = document.getElementById('manageScreenModelSelect').value;
+            const messageDiv = document.getElementById('manageScreenMessage');
+
+            messageDiv.style.display = 'none';
+
+            if (!selectedModel) {
+                messageDiv.textContent = 'Por favor, selecciona una pantalla para eliminar.';
+                messageDiv.className = 'error';
+                messageDiv.style.display = 'block';
+                return;
+            }
+
+            if (!screensData[selectedModel].isCustom) {
+                messageDiv.textContent = 'No se pueden eliminar pantallas predefinidas.';
+                messageDiv.className = 'error';
+                messageDiv.style.display = 'block';
+                return;
+            }
+
+            if (confirm(`¿Estás seguro de que quieres eliminar la pantalla "${selectedModel}"?`)) {
+                delete screensData[selectedModel];
+                saveScreensToLocalStorage();
+                populateManageScreenSelect();
+                populateScreenModelSelect();
+                document.getElementById('editScreenName').value = '';
+                document.getElementById('editScreenWidth').value = '';
+                document.getElementById('editScreenHeight').value = '';
+                document.getElementById('deleteScreenBtn').style.display = 'none';
+                document.getElementById('manageScreenModelSelect').value = '';
+                messageDiv.textContent = `Pantalla "${selectedModel}" eliminada exitosamente.`;
+                messageDiv.style.display = 'block';
+            }
+        }
+
+        let currentDrawingScaleFactor = 1;
+
+        function drawConfiguration() {
+            const screenModel = document.getElementById('screenModel').value;
+            const rows = parseInt(document.getElementById('rows').value);
+            const cols = parseInt(document.getElementById('cols').value);
+            const orientation = document.getElementById('orientation').value;
+
+            const drawingArea = document.getElementById('drawingArea');
+            const dimensionsDisplay = document.getElementById('dimensionsDisplay');
+
+            // Limpiar área de dibujo y mensaje
+            drawingArea.innerHTML = ''; // Limpiar completamente el área de dibujo
+            dimensionsDisplay.textContent = '';
+            document.getElementById('comparisonResult').style.display = 'none';
+            document.getElementById('comparisonError').style.display = 'none';
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'drawing-wrapper';
+            drawingArea.appendChild(wrapper); // El wrapper contendrá el dibujo de la pantalla
+
+            const screenInfo = screensData[screenModel];
+            if (!screenInfo) {
+                drawingArea.innerHTML = '<p class="error">Modelo de pantalla no encontrado.</p>';
+                return;
+            }
+            if (isNaN(rows) || rows < 1 || isNaN(cols) || cols < 1) {
+                drawingArea.innerHTML = '<p class="error">Filas y Columnas deben ser números enteros positivos.</p>';
+                return;
+            }
+
+            let individualScreenWidth, individualScreenHeight;
+
+            if (orientation === 'horizontal') {
+                individualScreenWidth = screenInfo.width;
+                individualScreenHeight = screenInfo.height;
+            } else { // 'vertical'
+                individualScreenWidth = screenInfo.height;
+                individualScreenHeight = screenInfo.width;
+            }
+
+            const totalWidth = individualScreenWidth * cols;
+            const totalHeight = individualScreenHeight * rows;
+
+            const maxDrawingSize = 250;
+            const maxDim = Math.max(totalWidth, totalHeight);
+            currentDrawingScaleFactor = maxDim > 0 ? maxDrawingSize / maxDim : 1;
+
+            const screenGroup = document.createElement('div');
+            screenGroup.id = 'currentConfigDrawing';
+            screenGroup.className = 'screen-group is-grid';
+            wrapper.appendChild(screenGroup);
+
+            screenGroup.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            screenGroup.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+            screenGroup.style.width = `${totalWidth * currentDrawingScaleFactor}px`;
+            screenGroup.style.height = `${totalHeight * currentDrawingScaleFactor}px`;
+
+            for (let i = 0; i < rows * cols; i++) {
+                const screenDiv = document.createElement('div');
+                screenDiv.className = 'screen';
+                screenDiv.textContent = screenModel;
+                screenDiv.style.width = `${individualScreenWidth * currentDrawingScaleFactor}px`;
+                screenDiv.style.height = `${individualScreenHeight * currentDrawingScaleFactor}px`;
+                screenGroup.appendChild(screenDiv);
+            }
+
+            // Mostrar dimensiones debajo del dibujo
+            dimensionsDisplay.textContent = `Dimensiones Configuradas: Ancho ${totalWidth.toFixed(1)} mm, Alto ${totalHeight.toFixed(1)} mm`;
+        }
+
+        function clearDrawing() {
+            document.getElementById('drawingArea').innerHTML = '<p class="info">Selecciona una configuración y haz clic en "Dibujar".</p>';
+            document.getElementById('dimensionsDisplay').textContent = '';
+            document.getElementById('comparisonResult').style.display = 'none';
+            document.getElementById('comparisonError').style.display = 'none';
+        }
+
+        // Función de comparación mejorada
+        function compareConfigurations() {
+            const compareMeasureWidthMeters = parseFloat(document.getElementById('compareMeasureWidth').value);
+            const compareMeasureHeightMeters = parseFloat(document.getElementById('compareMeasureHeight').value);
+            const comparisonType = document.getElementById('comparisonType').value;
+
+            const comparisonResultDiv = document.getElementById('comparisonResult');
+            const comparisonErrorDiv = document.getElementById('comparisonError');
+
+            comparisonResultDiv.style.display = 'none';
+            comparisonErrorDiv.style.display = 'none';
+            comparisonResultDiv.innerHTML = '';
+            comparisonErrorDiv.innerHTML = '';
+
+            if (isNaN(compareMeasureWidthMeters) || compareMeasureWidthMeters <= 0 ||
+                isNaN(compareMeasureHeightMeters) || compareMeasureHeightMeters <= 0) {
+                comparisonErrorDiv.textContent = 'Por favor, introduce medidas válidas y positivas (ancho y alto) en metros.';
+                comparisonErrorDiv.style.display = 'block';
+                return;
+            }
+
+            const compareMeasureWidthMM = compareMeasureWidthMeters * 1000;
+            const compareMeasureHeightMM = compareMeasureHeightMeters * 1000;
+
+            let bestMatch = null;
+            let minCombinedDifference = Infinity; // Para evaluar la diferencia en ambas dimensiones
+
+            const configurationsToEvaluate = [];
+
+            for (const model in screensData) {
+                const screenInfo = screensData[model];
+
+                // Considerar orientación Horizontal y Vertical para la pantalla individual
+                if (comparisonType === 'all' || comparisonType === 'single') {
+                    // Individual - Horizontal
+                    configurationsToEvaluate.push({
+                        name: `Pantalla ${model} (Individual - Horizontal)`,
+                        width: screenInfo.width,
+                        height: screenInfo.height,
+                        type: 'single'
+                    });
+
+                    // Individual - Vertical
+                    configurationsToEvaluate.push({
+                        name: `Pantalla ${model} (Individual - Vertical)`,
+                        width: screenInfo.height,
+                        height: screenInfo.width,
+                        type: 'single'
+                    });
+                }
+
+                // Generar configuraciones de matriz para un rango de filas y columnas
+                const possibleRows = [1, 2, 3, 4, 5]; // Rango de filas
+                const possibleCols = [1, 2, 3, 4, 5]; // Rango de columnas
+
+                if (comparisonType === 'all' || comparisonType === 'videowall') {
+                    for (let r of possibleRows) {
+                        for (let c of possibleCols) {
+                            if (r === 1 && c === 1) continue; // Ya cubierto por "Individual"
+
+                            // Matriz con pantallas en orientación Horizontal
+                            configurationsToEvaluate.push({
+                                name: `${model} ${r}x${c} (Horizontal)`,
+                                width: screenInfo.width * c,
+                                height: screenInfo.height * r,
+                                type: 'videowall'
+                            });
+
+                            // Matriz con pantallas en orientación Vertical
+                            configurationsToEvaluate.push({
+                                name: `${model} ${r}x${c} (Vertical)`,
+                                width: screenInfo.height * c,
+                                height: screenInfo.width * r,
+                                type: 'videowall'
+                            });
+                        }
+                    }
+                }
+            }
+
+            configurationsToEvaluate.forEach(config => {
+                const diffWidth = Math.abs(config.width - compareMeasureWidthMM);
+                const diffHeight = Math.abs(config.height - compareMeasureHeightMM);
+                
+                // Usar la suma de las diferencias absolutas como métrica de cercanía
+                const combinedDifference = diffWidth + diffHeight;
+
+                if (combinedDifference < minCombinedDifference) {
+                    minCombinedDifference = combinedDifference;
+                    bestMatch = config;
+                }
+            });
+
+            if (bestMatch) {
+                let comparisonText = `La configuración que más se acerca a tus medidas (Ancho: ${compareMeasureWidthMeters.toFixed(3)} m, Alto: ${compareMeasureHeightMeters.toFixed(3)} m) es: <strong>${bestMatch.name}</strong>.<br>`;
+                comparisonText += `Sus dimensiones son: Ancho ${(bestMatch.width / 1000).toFixed(3)} m, Alto ${(bestMatch.height / 1000).toFixed(3)} m.`;
+                
+                const diffWidthMeters = (Math.abs(bestMatch.width - compareMeasureWidthMM) / 1000).toFixed(3);
+                const diffHeightMeters = (Math.abs(bestMatch.height - compareMeasureHeightMM) / 1000).toFixed(3);
+
+                comparisonText += `<br>Diferencia de Ancho: ${diffWidthMeters} m, Diferencia de Alto: ${diffHeightMeters} m.`;
+                comparisonText += `<br>Diferencia Combinada: ${(minCombinedDifference / 1000).toFixed(3)} m`;
+
+                comparisonResultDiv.innerHTML = comparisonText;
+                comparisonResultDiv.style.display = 'block';
+
+                drawComparisonScreen(bestMatch, compareMeasureWidthMM, compareMeasureHeightMM);
+            } else {
+                comparisonErrorDiv.textContent = 'No se pudo encontrar una configuración adecuada para las medidas proporcionadas y el tipo de comparación seleccionado.';
+                comparisonErrorDiv.style.display = 'block';
+            }
+        }
+
+        function drawComparisonScreen(comparisonConfig, targetWidthMM, targetHeightMM) {
+            const drawingArea = document.getElementById('drawingArea');
+            let wrapper = drawingArea.querySelector('.drawing-wrapper');
+            if (!wrapper) {
+                drawingArea.innerHTML = '';
+                wrapper = document.createElement('div');
+                wrapper.className = 'drawing-wrapper';
+                drawingArea.appendChild(wrapper);
+            }
+
+            // Limpiar cualquier dibujo de comparación anterior o visual de medida de referencia
+            const existingComparison = document.getElementById('comparisonDrawing');
+            if (existingComparison) {
+                existingComparison.remove();
+            }
+            const existingTargetVisualContainer = document.getElementById('targetVisualContainer');
+            if (existingTargetVisualContainer) {
+                existingTargetVisualContainer.remove();
+            }
+
+            // --- Dibujar la Configuración que Mejor Coincide ---
+            // Calcular factor de escala para que tanto la configuración de comparación como la medida de referencia se visualicen bien.
+            const maxOverallDim = Math.max(comparisonConfig.width, comparisonConfig.height, targetWidthMM, targetHeightMM);
+            const maxDrawingSize = 250;
+            let scaleFactorForComparison = (maxOverallDim > 0) ? maxDrawingSize / maxOverallDim : 1;
+
+            const comparisonGroup = document.createElement('div');
+            comparisonGroup.id = 'comparisonDrawing';
+            comparisonGroup.className = 'comparison-screen-group';
+            comparisonGroup.style.width = `${comparisonConfig.width * scaleFactorForComparison}px`;
+            comparisonGroup.style.height = `${comparisonConfig.height * scaleFactorForComparison}px`;
+
+            const screenDiv = document.createElement('div');
+            screenDiv.className = 'screen';
+            let displayLabel = comparisonConfig.name;
+            const matchIndividual = comparisonConfig.name.match(/Pantalla (.+) \(Individual - (.+)\)/);
+            if (matchIndividual) {
+                const modelName = matchIndividual[1];
+                const orientation = matchIndividual[2];
+                const screenDataForModel = screensData[modelName];
+                if (screenDataForModel) {
+                     const inches = calculateInches(screenDataForModel.width, screenDataForModel.height).toFixed(1);
+                     displayLabel = `${modelName} (${inches}") ${orientation === 'Vertical' ? 'V' : 'H'}`;
+                } else {
+                    displayLabel = `${modelName} ${orientation === 'Vertical' ? 'V' : 'H'}`;
+                }
+            } else {
+                const matchMatrix = comparisonConfig.name.match(/(.+) (\d+)x(\d+) \((.+)\)/);
+                if (matchMatrix) {
+                    const modelName = matchMatrix[1];
+                    const rows = matchMatrix[2];
+                    const cols = matchMatrix[3];
+                    const orientation = matchMatrix[4];
+                    const screenDataForModel = screensData[modelName];
+                    if (screenDataForModel) {
+                        const inches = calculateInches(screenDataForModel.width, screenDataForModel.height).toFixed(1);
+                        displayLabel = `${modelName} (${inches}") ${rows}x${cols} ${orientation === 'Vertical' ? 'V' : 'H'}`;
+                    } else {
+                        displayLabel = `${modelName} ${rows}x${cols} ${orientation === 'Vertical' ? 'V' : 'H'}`;
+                    }
+                }
+            }
+            screenDiv.textContent = displayLabel;
+            screenDiv.style.width = '100%';
+            screenDiv.style.height = '100%';
+            comparisonGroup.appendChild(screenDiv);
+            wrapper.appendChild(comparisonGroup); // Añadir al wrapper
+
+            // --- Dibujar el Visual de la Medida de Referencia ---
+            const targetVisualContainer = document.createElement('div');
+            targetVisualContainer.id = 'targetVisualContainer';
+            targetVisualContainer.className = 'target-visual-container'; // Clase para estilo flex column
+            
+            const targetMeasureVisual = document.createElement('div');
+            targetMeasureVisual.id = 'targetMeasureVisual';
+            targetMeasureVisual.className = 'target-measure-visual'; // Nueva clase para el estilo visual
+            targetMeasureVisual.textContent = 'Medida de Referencia'; 
+
+            // Establecer dimensiones para el visual de la medida de referencia
+            targetMeasureVisual.style.width = `${targetWidthMM * scaleFactorForComparison}px`;
+            targetMeasureVisual.style.height = `${targetHeightMM * scaleFactorForComparison}px`;
+
+            targetVisualContainer.appendChild(targetMeasureVisual);
+
+            // --- Mostrar etiquetas de texto para la medida de referencia (fuera del visual) ---
+            const targetMeasureTextLabel = document.createElement('div');
+            targetMeasureTextLabel.id = 'targetMeasureTextLabel';
+            targetMeasureTextLabel.className = 'target-measure-text-label'; // Nueva clase para el estilo del texto
+            targetMeasureTextLabel.textContent = `Referencia: Ancho ${targetWidthMM.toFixed(1)} mm, Alto ${targetHeightMM.toFixed(1)} mm`;
+            
+            targetVisualContainer.appendChild(targetMeasureTextLabel);
+            
+            wrapper.appendChild(targetVisualContainer); // Añadir el contenedor (visual + texto) al wrapper
+        }
+    </script>
+</body>
+</html>
