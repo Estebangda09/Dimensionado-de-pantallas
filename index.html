@@ -205,6 +205,7 @@
                 '110 UM5K"': { width: 2474, height: 1408, depth: 99, isCustom: false }
         };
 
+
         document.addEventListener('DOMContentLoaded', () => {
             loadScreensFromLocalStorage();
             populateManageScreenSelect();
@@ -247,7 +248,8 @@
             if (storedData) {
                 try {
                     const parsedData = JSON.parse(storedData);
-                    
+                    // Combina las pantallas predeterminadas con las guardadas localmente.
+                    // Las locales sobrescriben las predeterminadas si hay un mismo nombre.
                     screensData = { ...defaultScreens, ...parsedData };
                 } catch (e) {
                     console.error("Error parsing stored data from localStorage:", e);
