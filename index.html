@@ -11,6 +11,17 @@
             background-color: #f4f4f4;
             color: #333;
         }
+        /* Nuevo estilo para el botón de cerrar sesión superior */
+        .top-logout-container {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        .top-logout-container .logout-button {
+            width: auto; /* Para que el botón no ocupe todo el ancho */
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+
         .container {
             display: flex;
             gap: 20px;
@@ -29,7 +40,37 @@
             border-bottom: 2px solid #eee;
             padding-bottom: 10px;
             margin-bottom: 20px;
+            display: flex; /* Para alinear título y botón de toggle */
+            justify-content: space-between;
+            align-items: center;
         }
+        h2 .toggle-button {
+            background: none;
+            border: 1px solid #ccc; /* Borde más suave */
+            color: #555;
+            padding: 5px 10px;
+            font-size: 1em;
+            cursor: pointer;
+            border-radius: 4px;
+            width: auto; /* Para que no ocupe todo el ancho */
+            margin-bottom: 0; /* No margin-bottom de button general */
+        }
+        h2 .toggle-button:hover {
+            background-color: #f0f0f0;
+        }
+        .panel-content {
+            /* Esto se usará para ocultar/mostrar */
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+            overflow: hidden;
+        }
+        .panel-content.hidden {
+            max-height: 0;
+            opacity: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            margin-bottom: 0;
+        }
+
         label {
             display: block;
             margin-bottom: 8px;
@@ -165,42 +206,51 @@
             font-weight: bold;
             color: #0056b3;
         }
-        /* Estilo para el botón de cerrar sesión */
         .logout-button {
             background-color: #dc3545;
-            margin-top: 20px;
+            border: none;
+            cursor: pointer;
+            color: white;
+            border-radius: 4px;
         }
         .logout-button:hover {
             background-color: #c82333;
+        }
+        /* Estilo para las dimensiones debajo del dibujo */
+        #dimensionsDisplay {
+            margin-top: 15px; /* Espacio con el dibujo */
+            text-align: center;
+            font-weight: bold;
+            color: #0056b3;
         }
     </style>
 </head>
 <body>
     <script>
-        // LÓGICA DE VERIFICACIÓN DE SESIÓN (AGREGAR ESTO AL PRINCIPIO DEL SCRIPT)
+        // LÓGICA DE VERIFICACIÓN DE SESIÓN
         if (sessionStorage.getItem('loggedIn') !== 'true') {
             window.location.href = 'login.html'; // Redirige al login si no está logueado
         }
-        // --- FIN LÓGICA DE VERIFICACIÓN DE SESIÓN ---
 
         const MM_TO_INCH = 25.4;
 
+        // **DATOS DE PANTALLAS ACTUALIZADOS**
         let screensData = {
-             '43 UL3J': { width: 967, height: 564, depth: 57.1, isCustom: false },
-                '50 UL3J': { width: 1128, height: 649, depth: 57.1, isCustom: false },
-                '55 UL3J': { width: 1244, height: 721, depth: 57.5, isCustom: false },
-                '65 UL3J': { width: 1457, height: 838, depth: 57.5, isCustom: false },
-                '75 UL3J': { width: 1683, height: 960, depth: 57.5, isCustom: false },
-                '86 UL3J"': { width: 1927, height: 1104, depth: 59.9, isCustom: false },
-                '43 UH5F': { width: 962.5, height: 568, depth: 39.9, isCustom: false },
-                '49 UH5F': { width: 1098.6, height: 644.5, depth: 39.9, isCustom: false },
-                '55 UH5F': { width: 1234.4, height: 720.9, depth: 39.9, isCustom: false },
-                '65 UH5F': { width: 1453.3 , height: 844, depth: 39.9, isCustom: false },
-                '75 UH5J"': { width: 1682.4, height: 960.3, depth: 57.9, isCustom: false },
-                '86 UH5J"': { width: 1926.2, height: 1097.2, depth: 60.6, isCustom: false },
-                '98 UH5F': { width: 2191.8 , height: 1246.8, depth: 69.4, isCustom: false },                
-                '98 UM5K"': { width: 2198, height: 1253, depth: 79.5, isCustom: false },
-                '110 UM5K"': { width: 2474, height: 1408, depth: 99, isCustom: false }
+            '43 UL3J': { width: 967, height: 564, depth: 57.1, isCustom: false },
+            '50 UL3J': { width: 1128, height: 649, depth: 57.1, isCustom: false },
+            '55 UL3J': { width: 1244, height: 721, depth: 57.5, isCustom: false },
+            '65 UL3J': { width: 1457, height: 838, depth: 57.5, isCustom: false },
+            '75 UL3J': { width: 1683, height: 960, depth: 57.5, isCustom: false },
+            '86 UL3J': { width: 1927, height: 1104, depth: 59.9, isCustom: false },
+            '43 UH5F': { width: 962.5, height: 568, depth: 39.9, isCustom: false },
+            '49 UH5F': { width: 1098.6, height: 644.5, depth: 39.9, isCustom: false },
+            '55 UH5F': { width: 1234.4, height: 720.9, depth: 39.9, isCustom: false },
+            '65 UH5F': { width: 1453.3 , height: 844, depth: 39.9, isCustom: false },
+            '75 UH5J': { width: 1682.4, height: 960.3, depth: 57.9, isCustom: false },
+            '86 UH5J': { width: 1926.2, height: 1097.2, depth: 60.6, isCustom: false },
+            '98 UH5F': { width: 2191.8 , height: 1246.8, depth: 69.4, isCustom: false },
+            '98 UM5K': { width: 2198, height: 1253, depth: 79.5, isCustom: false },
+            '110 UM5K': { width: 2474, height: 1408, depth: 99, isCustom: false }
         };
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -224,22 +274,23 @@
 
         function loadScreensFromLocalStorage() {
             const storedData = localStorage.getItem('allScreensData');
+            // **DATOS DE PANTALLAS POR DEFECTO ACTUALIZADOS**
             const defaultScreens = {
-                 '43 UL3J': { width: 967, height: 564, depth: 57.1, isCustom: false },
+                '43 UL3J': { width: 967, height: 564, depth: 57.1, isCustom: false },
                 '50 UL3J': { width: 1128, height: 649, depth: 57.1, isCustom: false },
                 '55 UL3J': { width: 1244, height: 721, depth: 57.5, isCustom: false },
                 '65 UL3J': { width: 1457, height: 838, depth: 57.5, isCustom: false },
                 '75 UL3J': { width: 1683, height: 960, depth: 57.5, isCustom: false },
-                '86 UL3J"': { width: 1927, height: 1104, depth: 59.9, isCustom: false },
+                '86 UL3J': { width: 1927, height: 1104, depth: 59.9, isCustom: false },
                 '43 UH5F': { width: 962.5, height: 568, depth: 39.9, isCustom: false },
                 '49 UH5F': { width: 1098.6, height: 644.5, depth: 39.9, isCustom: false },
                 '55 UH5F': { width: 1234.4, height: 720.9, depth: 39.9, isCustom: false },
                 '65 UH5F': { width: 1453.3 , height: 844, depth: 39.9, isCustom: false },
-                '75 UH5J"': { width: 1682.4, height: 960.3, depth: 57.9, isCustom: false },
-                '86 UH5J"': { width: 1926.2, height: 1097.2, depth: 60.6, isCustom: false },
-                '98 UH5F': { width: 2191.8 , height: 1246.8, depth: 69.4, isCustom: false },                
-                '98 UM5K"': { width: 2198, height: 1253, depth: 79.5, isCustom: false },
-                '110 UM5K"': { width: 2474, height: 1408, depth: 99, isCustom: false }
+                '75 UH5J': { width: 1682.4, height: 960.3, depth: 57.9, isCustom: false },
+                '86 UH5J': { width: 1926.2, height: 1097.2, depth: 60.6, isCustom: false },
+                '98 UH5F': { width: 2191.8 , height: 1246.8, depth: 69.4, isCustom: false },
+                '98 UM5K': { width: 2198, height: 1253, depth: 79.5, isCustom: false },
+                '110 UM5K': { width: 2474, height: 1408, depth: 99, isCustom: false }
             };
 
             if (storedData) {
@@ -259,7 +310,7 @@
             const manageScreenModelSelect = document.getElementById('manageScreenModelSelect');
             if (!manageScreenModelSelect) {
                 console.error("Elemento 'manageScreenModelSelect' no encontrado. Asegúrate de que el HTML esté completo.");
-                return; // Salir de la función si el elemento no existe
+                return;
             }
             manageScreenModelSelect.innerHTML = '<option value="">-- Seleccionar o Agregar Nuevo --</option>';
 
@@ -290,7 +341,7 @@
             const screenModelSelect = document.getElementById('screenModel');
             if (!screenModelSelect) {
                 console.error("Elemento 'screenModel' no encontrado. Asegúrate de que el HTML esté completo.");
-                return; // Salir de la función si el elemento no existe
+                return;
             }
             screenModelSelect.innerHTML = '';
 
@@ -378,7 +429,7 @@
                     }
                     delete screensData[selectedModelInDropdown];
                 }
-                
+
                 screensData[newName] = {
                     width: width,
                     height: height,
@@ -388,7 +439,7 @@
 
             } else {
                 if (screensData[newName]) {
-                    messageDiv.textContent = `Ya existe una pantalla con el nombre "${newName}". Por favor, edítala o elige otro nombre.`;
+                    messageDiv.textContent = `Ya existe una pantalla con el nombre "${newName}". Por favor, edítala o elige otro nombre.`
                     messageDiv.className = 'error';
                     messageDiv.style.display = 'block';
                     return;
@@ -405,7 +456,7 @@
             populateManageScreenSelect();
             populateScreenModelSelect();
             messageDiv.textContent = `Pantalla "${newName}" guardada exitosamente.`;
-            messageDiv.className = 'info'; // Usar clase info para éxito
+            messageDiv.className = 'info';
             messageDiv.style.display = 'block';
 
             document.getElementById('manageScreenModelSelect').value = newName;
@@ -441,7 +492,7 @@
                 document.getElementById('deleteScreenBtn').style.display = 'none';
                 document.getElementById('manageScreenModelSelect').value = '';
                 messageDiv.textContent = `Pantalla "${selectedModel}" eliminada exitosamente.`;
-                messageDiv.className = 'info'; // Usar clase info para éxito
+                messageDiv.className = 'info';
                 messageDiv.style.display = 'block';
             }
         }
@@ -455,7 +506,7 @@
             const orientation = document.getElementById('orientation').value;
 
             const drawingArea = document.getElementById('drawingArea');
-            const dimensionsDisplay = document.getElementById('dimensionsDisplay');
+            const dimensionsDisplay = document.getElementById('dimensionsDisplay'); // Ahora está dentro del mismo panel
 
             if (!drawingArea || !dimensionsDisplay) {
                 console.error("Elementos 'drawingArea' o 'dimensionsDisplay' no encontrados.");
@@ -463,7 +514,7 @@
             }
 
             drawingArea.innerHTML = '';
-            dimensionsDisplay.textContent = '';
+            dimensionsDisplay.textContent = ''; // Limpiar el texto de dimensiones al dibujar
             document.getElementById('comparisonResult').style.display = 'none';
             document.getElementById('comparisonError').style.display = 'none';
 
@@ -517,6 +568,7 @@
                 screenGroup.appendChild(screenDiv);
             }
 
+            // Actualizar las dimensiones debajo del cuadro de visualización
             dimensionsDisplay.textContent = `Dimensiones Configuradas: Ancho ${totalWidth.toFixed(1)} mm, Alto ${totalHeight.toFixed(1)} mm`;
         }
 
@@ -527,7 +579,7 @@
             }
             const dimensionsDisplay = document.getElementById('dimensionsDisplay');
             if (dimensionsDisplay) {
-                dimensionsDisplay.textContent = '';
+                dimensionsDisplay.textContent = ''; // Limpiar las dimensiones también
             }
             const comparisonResult = document.getElementById('comparisonResult');
             if (comparisonResult) {
@@ -747,48 +799,80 @@
             sessionStorage.removeItem('loggedIn');
             window.location.href = 'login.html';
         }
+
+        // Función para ocultar/mostrar paneles
+        function togglePanel(panelId) {
+            const panelContent = document.getElementById(panelId).querySelector('.panel-content');
+            const toggleButton = document.getElementById(panelId).querySelector('.toggle-button');
+
+            if (panelContent.classList.contains('hidden')) {
+                panelContent.classList.remove('hidden');
+                // Al mostrar, establecer max-height a scrollHeight para la animación
+                panelContent.style.maxHeight = panelContent.scrollHeight + 'px'; 
+                panelContent.style.opacity = '1';
+                toggleButton.textContent = 'Ocultar';
+            } else {
+                panelContent.style.maxHeight = '0'; // Al ocultar, establecer max-height a 0
+                panelContent.style.opacity = '0';
+                panelContent.classList.add('hidden');
+                toggleButton.textContent = 'Mostrar';
+            }
+        }
     </script>
 
+    <div class="top-logout-container">
+        <button onclick="logout()" class="logout-button">Cerrar Sesión</button>
+    </div>
+
     <div class="container">
-        <div class="panel">
-            <h2>Gestionar Pantallas Personalizadas</h2>
-            <label for="manageScreenModelSelect">Seleccionar Pantalla:</label>
-            <select id="manageScreenModelSelect" onchange="loadScreenForEditing()"></select>
+        <div class="panel" id="manageScreensPanel">
+            <h2>
+                Gestionar Pantallas Personalizadas
+                <button class="toggle-button" onclick="togglePanel('manageScreensPanel')">Ocultar</button>
+            </h2>
+            <div class="panel-content">
+                <label for="manageScreenModelSelect">Seleccionar Pantalla:</label>
+                <select id="manageScreenModelSelect" onchange="loadScreenForEditing()"></select>
 
-            <label for="editScreenName">Nombre de la Pantalla:</label>
-            <input type="text" id="editScreenName" placeholder="Ej: MiPantalla70">
+                <label for="editScreenName">Nombre de la Pantalla:</label>
+                <input type="text" id="editScreenName" placeholder="Ej: MiPantalla70">
 
-            <label for="editScreenWidth">Ancho (mm):</label>
-            <input type="number" id="editScreenWidth" step="0.1" placeholder="Ej: 1549.8">
+                <label for="editScreenWidth">Ancho (mm):</label>
+                <input type="number" id="editScreenWidth" step="0.1" placeholder="Ej: 1549.8">
 
-            <label for="editScreenHeight">Alto (mm):</label>
-            <input type="number" id="editScreenHeight" step="0.1" placeholder="Ej: 871.8">
+                <label for="editScreenHeight">Alto (mm):</label>
+                <input type="number" id="editScreenHeight" step="0.1" placeholder="Ej: 871.8">
 
-            <button onclick="saveScreen()">Guardar Pantalla</button>
-            <button id="deleteScreenBtn" onclick="deleteSelectedScreen()" class="logout-button" style="display: none;">Eliminar Pantalla</button>
-            <div id="manageScreenMessage" class="info" style="display: none;"></div>
+                <button onclick="saveScreen()">Guardar Pantalla</button>
+                <button id="deleteScreenBtn" onclick="deleteSelectedScreen()" class="logout-button" style="display: none;">Eliminar Pantalla</button>
+                <div id="manageScreenMessage" class="info" style="display: none;"></div>
+            </div>
         </div>
 
-        <div class="panel">
-            <h2>Configurar Pantallas</h2>
-            <label for="screenModel">Modelo de Pantalla:</label>
-            <select id="screenModel"></select>
+        <div class="panel" id="configureScreensPanel">
+            <h2>
+                Configurar Pantallas
+                <button class="toggle-button" onclick="togglePanel('configureScreensPanel')">Ocultar</button>
+            </h2>
+            <div class="panel-content">
+                <label for="screenModel">Modelo de Pantalla:</label>
+                <select id="screenModel"></select>
 
-            <label for="rows">Filas:</label>
-            <input type="number" id="rows" value="1" min="1">
+                <label for="rows">Filas:</label>
+                <input type="number" id="rows" value="1" min="1">
 
-            <label for="cols">Columnas:</label>
-            <input type="number" id="cols" value="1" min="1">
+                <label for="cols">Columnas:</label>
+                <input type="number" id="cols" value="1" min="1">
 
-            <label for="orientation">Orientación:</label>
-            <select id="orientation">
-                <option value="horizontal">Horizontal</option>
-                <option value="vertical">Vertical</option>
-            </select>
+                <label for="orientation">Orientación:</label>
+                <select id="orientation">
+                    <option value="horizontal">Horizontal</option>
+                    <option value="vertical">Vertical</option>
+                </select>
 
-            <button onclick="drawConfiguration()">Dibujar Configuración</button>
-            <button onclick="clearDrawing()">Limpiar Dibujo</button>
-            <p id="dimensionsDisplay"></p>
+                <button onclick="drawConfiguration()">Dibujar Configuración</button>
+                <button onclick="clearDrawing()">Limpiar Dibujo</button>
+            </div>
         </div>
 
         <div class="panel">
@@ -796,6 +880,7 @@
             <div id="drawingArea">
                 <p class="info">Selecciona una configuración y haz clic en "Dibujar".</p>
             </div>
+            <p id="dimensionsDisplay"></p> 
 
             <h3>Comparar con Medida de Referencia</h3>
             <label for="compareMeasureWidth">Ancho de Referencia (metros):</label>
@@ -803,7 +888,7 @@
 
             <label for="compareMeasureHeight">Alto de Referencia (metros):</label>
             <input type="number" id="compareMeasureHeight" step="0.001" placeholder="Ej: 2.1">
-            
+
             <label for="comparisonType">Tipo de Comparación:</label>
             <select id="comparisonType">
                 <option value="all">Todas las Configuraciones</option>
@@ -815,12 +900,6 @@
             <div id="comparisonResult" class="comparison-result" style="display: none;"></div>
             <div id="comparisonError" class="error" style="display: none;"></div>
         </div>
-
-        <div class="panel">
-            <h2>Gestión de Sesión</h2>
-            <button onclick="logout()" class="logout-button">Cerrar Sesión</button>
-        </div>
     </div>
-
 </body>
 </html>
