@@ -113,8 +113,6 @@
             border: 1px solid #343a40;
             position: relative;
         }
-        /* Eliminar estilos de etiquetas superpuestas */
-        /* .dimensions-label, .width-label, .height-label, .comparison-label ya no son necesarios en el CSS */
         .comparison-result {
             margin-top: 20px;
             padding: 15px;
@@ -159,7 +157,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin: 10px; /* Separación entre elementos en el wrapper */
+            margin: 10px;
         }
         .target-measure-text-label {
             text-align: center;
@@ -169,7 +167,7 @@
         }
         /* Estilo para el botón de cerrar sesión */
         .logout-button {
-            background-color: #dc3545; /* Color rojo para cerrar sesión */
+            background-color: #dc3545;
             margin-top: 20px;
         }
         .logout-button:hover {
@@ -188,7 +186,7 @@
         const MM_TO_INCH = 25.4;
 
         let screensData = {
-            '43 UL3J': { width: 967, height: 564, depth: 57.1, isCustom: false },
+             '43 UL3J': { width: 967, height: 564, depth: 57.1, isCustom: false },
                 '50 UL3J': { width: 1128, height: 649, depth: 57.1, isCustom: false },
                 '55 UL3J': { width: 1244, height: 721, depth: 57.5, isCustom: false },
                 '65 UL3J': { width: 1457, height: 838, depth: 57.5, isCustom: false },
@@ -204,7 +202,6 @@
                 '98 UM5K"': { width: 2198, height: 1253, depth: 79.5, isCustom: false },
                 '110 UM5K"': { width: 2474, height: 1408, depth: 99, isCustom: false }
         };
-
 
         document.addEventListener('DOMContentLoaded', () => {
             loadScreensFromLocalStorage();
@@ -228,7 +225,7 @@
         function loadScreensFromLocalStorage() {
             const storedData = localStorage.getItem('allScreensData');
             const defaultScreens = {
-                '43 UL3J': { width: 967, height: 564, depth: 57.1, isCustom: false },
+                 '43 UL3J': { width: 967, height: 564, depth: 57.1, isCustom: false },
                 '50 UL3J': { width: 1128, height: 649, depth: 57.1, isCustom: false },
                 '55 UL3J': { width: 1244, height: 721, depth: 57.5, isCustom: false },
                 '65 UL3J': { width: 1457, height: 838, depth: 57.5, isCustom: false },
@@ -248,8 +245,6 @@
             if (storedData) {
                 try {
                     const parsedData = JSON.parse(storedData);
-                    // Combina las pantallas predeterminadas con las guardadas localmente.
-                    // Las locales sobrescriben las predeterminadas si hay un mismo nombre.
                     screensData = { ...defaultScreens, ...parsedData };
                 } catch (e) {
                     console.error("Error parsing stored data from localStorage:", e);
@@ -262,6 +257,10 @@
 
         function populateManageScreenSelect() {
             const manageScreenModelSelect = document.getElementById('manageScreenModelSelect');
+            if (!manageScreenModelSelect) {
+                console.error("Elemento 'manageScreenModelSelect' no encontrado. Asegúrate de que el HTML esté completo.");
+                return; // Salir de la función si el elemento no existe
+            }
             manageScreenModelSelect.innerHTML = '<option value="">-- Seleccionar o Agregar Nuevo --</option>';
 
             const sortedKeys = Object.keys(screensData).sort((a, b) => {
@@ -281,11 +280,18 @@
                 manageScreenModelSelect.appendChild(option);
             });
 
-            document.getElementById('deleteScreenBtn').style.display = 'none';
+            const deleteScreenBtn = document.getElementById('deleteScreenBtn');
+            if (deleteScreenBtn) {
+                deleteScreenBtn.style.display = 'none';
+            }
         }
 
         function populateScreenModelSelect() {
             const screenModelSelect = document.getElementById('screenModel');
+            if (!screenModelSelect) {
+                console.error("Elemento 'screenModel' no encontrado. Asegúrate de que el HTML esté completo.");
+                return; // Salir de la función si el elemento no existe
+            }
             screenModelSelect.innerHTML = '';
 
             const sortedKeys = Object.keys(screensData).sort((a, b) => {
@@ -314,22 +320,24 @@
             const deleteScreenBtn = document.getElementById('deleteScreenBtn');
             const messageDiv = document.getElementById('manageScreenMessage');
 
+            if (!editScreenNameInput || !editScreenWidthInput || !editScreenHeightInput || !deleteScreenBtn || !messageDiv) {
+                console.error("Uno o más elementos de edición de pantalla no se encontraron.");
+                return;
+            }
+
             messageDiv.style.display = 'none';
-            editScreenNameInput.readOnly = false; // Por defecto editable
+            editScreenNameInput.readOnly = false;
 
             if (selectedModel && screensData[selectedModel]) {
                 const screen = screensData[selectedModel];
                 editScreenNameInput.value = selectedModel;
                 editScreenWidthInput.value = screen.width;
                 editScreenHeightInput.value = screen.height;
-                // Si la pantalla NO es personalizada, su nombre es de solo lectura.
                 if (!screen.isCustom) {
                     editScreenNameInput.readOnly = true;
                 }
-                // Mostrar botón de eliminar solo para pantallas personalizadas
                 deleteScreenBtn.style.display = screen.isCustom ? 'block' : 'none';
             } else {
-                // Limpiar campos para nueva entrada
                 editScreenNameInput.value = '';
                 editScreenWidthInput.value = '';
                 editScreenHeightInput.value = '';
@@ -344,9 +352,6 @@
             const height = parseFloat(document.getElementById('editScreenHeight').value);
             const messageDiv = document.getElementById('manageScreenMessage');
 
-            messageDiv.style.display = 'none';
-            messageDiv.className = 'info';
-
             if (!newName || isNaN(width) || width <= 0 || isNaN(height) || height <= 0) {
                 messageDiv.textContent = 'Por favor, rellena todos los campos con valores válidos y positivos.';
                 messageDiv.className = 'error';
@@ -354,11 +359,9 @@
                 return;
             }
 
-            // Caso 1: Editando una pantalla existente (predefinida o personalizada)
             if (selectedModelInDropdown && screensData[selectedModelInDropdown]) {
                 const currentScreen = screensData[selectedModelInDropdown];
 
-                // Si se está intentando cambiar el nombre de una pantalla predefinida
                 if (!currentScreen.isCustom && selectedModelInDropdown !== newName) {
                     messageDiv.textContent = 'No se puede cambiar el nombre de una pantalla predefinida. Para un modelo similar, crea una nueva.';
                     messageDiv.className = 'error';
@@ -366,18 +369,16 @@
                     return;
                 }
 
-                // Si se está cambiando el nombre de una pantalla personalizada
                 if (currentScreen.isCustom && selectedModelInDropdown !== newName) {
-                    if (screensData[newName]) { // Si el nuevo nombre ya existe
+                    if (screensData[newName]) {
                         messageDiv.textContent = `Ya existe una pantalla con el nombre "${newName}".`;
                         messageDiv.className = 'error';
                         messageDiv.style.display = 'block';
                         return;
                     }
-                    delete screensData[selectedModelInDropdown]; // Eliminar la entrada antigua
+                    delete screensData[selectedModelInDropdown];
                 }
                 
-                // Guardar/actualizar la pantalla con el (nuevo) nombre
                 screensData[newName] = {
                     width: width,
                     height: height,
@@ -385,8 +386,8 @@
                     isCustom: currentScreen.isCustom || true
                 };
 
-            } else { // Caso 2: Agregando una nueva pantalla
-                if (screensData[newName]) { // Si el nombre ya existe
+            } else {
+                if (screensData[newName]) {
                     messageDiv.textContent = `Ya existe una pantalla con el nombre "${newName}". Por favor, edítala o elige otro nombre.`;
                     messageDiv.className = 'error';
                     messageDiv.style.display = 'block';
@@ -404,6 +405,7 @@
             populateManageScreenSelect();
             populateScreenModelSelect();
             messageDiv.textContent = `Pantalla "${newName}" guardada exitosamente.`;
+            messageDiv.className = 'info'; // Usar clase info para éxito
             messageDiv.style.display = 'block';
 
             document.getElementById('manageScreenModelSelect').value = newName;
@@ -413,8 +415,6 @@
         function deleteSelectedScreen() {
             const selectedModel = document.getElementById('manageScreenModelSelect').value;
             const messageDiv = document.getElementById('manageScreenMessage');
-
-            messageDiv.style.display = 'none';
 
             if (!selectedModel) {
                 messageDiv.textContent = 'Por favor, selecciona una pantalla para eliminar.';
@@ -441,6 +441,7 @@
                 document.getElementById('deleteScreenBtn').style.display = 'none';
                 document.getElementById('manageScreenModelSelect').value = '';
                 messageDiv.textContent = `Pantalla "${selectedModel}" eliminada exitosamente.`;
+                messageDiv.className = 'info'; // Usar clase info para éxito
                 messageDiv.style.display = 'block';
             }
         }
@@ -456,15 +457,19 @@
             const drawingArea = document.getElementById('drawingArea');
             const dimensionsDisplay = document.getElementById('dimensionsDisplay');
 
-            // Limpiar área de dibujo y mensaje
-            drawingArea.innerHTML = ''; // Limpiar completamente el área de dibujo
+            if (!drawingArea || !dimensionsDisplay) {
+                console.error("Elementos 'drawingArea' o 'dimensionsDisplay' no encontrados.");
+                return;
+            }
+
+            drawingArea.innerHTML = '';
             dimensionsDisplay.textContent = '';
             document.getElementById('comparisonResult').style.display = 'none';
             document.getElementById('comparisonError').style.display = 'none';
 
             const wrapper = document.createElement('div');
             wrapper.className = 'drawing-wrapper';
-            drawingArea.appendChild(wrapper); // El wrapper contendrá el dibujo de la pantalla
+            drawingArea.appendChild(wrapper);
 
             const screenInfo = screensData[screenModel];
             if (!screenInfo) {
@@ -512,18 +517,28 @@
                 screenGroup.appendChild(screenDiv);
             }
 
-            // Mostrar dimensiones debajo del dibujo
             dimensionsDisplay.textContent = `Dimensiones Configuradas: Ancho ${totalWidth.toFixed(1)} mm, Alto ${totalHeight.toFixed(1)} mm`;
         }
 
         function clearDrawing() {
-            document.getElementById('drawingArea').innerHTML = '<p class="info">Selecciona una configuración y haz clic en "Dibujar".</p>';
-            document.getElementById('dimensionsDisplay').textContent = '';
-            document.getElementById('comparisonResult').style.display = 'none';
-            document.getElementById('comparisonError').style.display = 'none';
+            const drawingArea = document.getElementById('drawingArea');
+            if (drawingArea) {
+                drawingArea.innerHTML = '<p class="info">Selecciona una configuración y haz clic en "Dibujar".</p>';
+            }
+            const dimensionsDisplay = document.getElementById('dimensionsDisplay');
+            if (dimensionsDisplay) {
+                dimensionsDisplay.textContent = '';
+            }
+            const comparisonResult = document.getElementById('comparisonResult');
+            if (comparisonResult) {
+                comparisonResult.style.display = 'none';
+            }
+            const comparisonError = document.getElementById('comparisonError');
+            if (comparisonError) {
+                comparisonError.style.display = 'none';
+            }
         }
 
-        // Función de comparación mejorada
         function compareConfigurations() {
             const compareMeasureWidthMeters = parseFloat(document.getElementById('compareMeasureWidth').value);
             const compareMeasureHeightMeters = parseFloat(document.getElementById('compareMeasureHeight').value);
@@ -531,6 +546,11 @@
 
             const comparisonResultDiv = document.getElementById('comparisonResult');
             const comparisonErrorDiv = document.getElementById('comparisonError');
+
+            if (!comparisonResultDiv || !comparisonErrorDiv) {
+                console.error("Elementos de resultado/error de comparación no encontrados.");
+                return;
+            }
 
             comparisonResultDiv.style.display = 'none';
             comparisonErrorDiv.style.display = 'none';
@@ -548,16 +568,14 @@
             const compareMeasureHeightMM = compareMeasureHeightMeters * 1000;
 
             let bestMatch = null;
-            let minCombinedDifference = Infinity; // Para evaluar la diferencia en ambas dimensiones
+            let minCombinedDifference = Infinity;
 
             const configurationsToEvaluate = [];
 
             for (const model in screensData) {
                 const screenInfo = screensData[model];
 
-                // Considerar orientación Horizontal y Vertical para la pantalla individual
                 if (comparisonType === 'all' || comparisonType === 'single') {
-                    // Individual - Horizontal
                     configurationsToEvaluate.push({
                         name: `Pantalla ${model} (Individual - Horizontal)`,
                         width: screenInfo.width,
@@ -565,7 +583,6 @@
                         type: 'single'
                     });
 
-                    // Individual - Vertical
                     configurationsToEvaluate.push({
                         name: `Pantalla ${model} (Individual - Vertical)`,
                         width: screenInfo.height,
@@ -574,16 +591,14 @@
                     });
                 }
 
-                // Generar configuraciones de matriz para un rango de filas y columnas
-                const possibleRows = [1, 2, 3, 4, 5]; // Rango de filas
-                const possibleCols = [1, 2, 3, 4, 5]; // Rango de columnas
+                const possibleRows = [1, 2, 3, 4, 5];
+                const possibleCols = [1, 2, 3, 4, 5];
 
                 if (comparisonType === 'all' || comparisonType === 'videowall') {
                     for (let r of possibleRows) {
                         for (let c of possibleCols) {
-                            if (r === 1 && c === 1) continue; // Ya cubierto por "Individual"
+                            if (r === 1 && c === 1) continue;
 
-                            // Matriz con pantallas en orientación Horizontal
                             configurationsToEvaluate.push({
                                 name: `${model} ${r}x${c} (Horizontal)`,
                                 width: screenInfo.width * c,
@@ -591,7 +606,6 @@
                                 type: 'videowall'
                             });
 
-                            // Matriz con pantallas en orientación Vertical
                             configurationsToEvaluate.push({
                                 name: `${model} ${r}x${c} (Vertical)`,
                                 width: screenInfo.height * c,
@@ -607,7 +621,6 @@
                 const diffWidth = Math.abs(config.width - compareMeasureWidthMM);
                 const diffHeight = Math.abs(config.height - compareMeasureHeightMM);
                 
-                // Usar la suma de las diferencias absolutas como métrica de cercanía
                 const combinedDifference = diffWidth + diffHeight;
 
                 if (combinedDifference < minCombinedDifference) {
@@ -638,6 +651,10 @@
 
         function drawComparisonScreen(comparisonConfig, targetWidthMM, targetHeightMM) {
             const drawingArea = document.getElementById('drawingArea');
+            if (!drawingArea) {
+                console.error("Elemento 'drawingArea' no encontrado para dibujar comparación.");
+                return;
+            }
             let wrapper = drawingArea.querySelector('.drawing-wrapper');
             if (!wrapper) {
                 drawingArea.innerHTML = '';
@@ -646,7 +663,6 @@
                 drawingArea.appendChild(wrapper);
             }
 
-            // Limpiar cualquier dibujo de comparación anterior o visual de medida de referencia
             const existingComparison = document.getElementById('comparisonDrawing');
             if (existingComparison) {
                 existingComparison.remove();
@@ -656,8 +672,6 @@
                 existingTargetVisualContainer.remove();
             }
 
-            // --- Dibujar la Configuración que Mejor Coincide ---
-            // Calcular factor de escala para que tanto la configuración de comparación como la medida de referencia se visualicen bien.
             const maxOverallDim = Math.max(comparisonConfig.width, comparisonConfig.height, targetWidthMM, targetHeightMM);
             const maxDrawingSize = 250;
             let scaleFactorForComparison = (maxOverallDim > 0) ? maxDrawingSize / maxOverallDim : 1;
@@ -702,40 +716,111 @@
             screenDiv.style.width = '100%';
             screenDiv.style.height = '100%';
             comparisonGroup.appendChild(screenDiv);
-            wrapper.appendChild(comparisonGroup); // Añadir al wrapper
+            wrapper.appendChild(comparisonGroup);
 
-            // --- Dibujar el Visual de la Medida de Referencia ---
             const targetVisualContainer = document.createElement('div');
             targetVisualContainer.id = 'targetVisualContainer';
-            targetVisualContainer.className = 'target-visual-container'; // Clase para estilo flex column
+            targetVisualContainer.className = 'target-visual-container';
             
             const targetMeasureVisual = document.createElement('div');
             targetMeasureVisual.id = 'targetMeasureVisual';
-            targetMeasureVisual.className = 'target-measure-visual'; // Nueva clase para el estilo visual
-            targetMeasureVisual.textContent = 'Medida de Referencia'; 
+            targetMeasureVisual.className = 'target-measure-visual';
+            targetMeasureVisual.textContent = 'Medida de Referencia';
 
-            // Establecer dimensiones para el visual de la medida de referencia
             targetMeasureVisual.style.width = `${targetWidthMM * scaleFactorForComparison}px`;
             targetMeasureVisual.style.height = `${targetHeightMM * scaleFactorForComparison}px`;
 
             targetVisualContainer.appendChild(targetMeasureVisual);
 
-            // --- Mostrar etiquetas de texto para la medida de referencia (fuera del visual) ---
             const targetMeasureTextLabel = document.createElement('div');
             targetMeasureTextLabel.id = 'targetMeasureTextLabel';
-            targetMeasureTextLabel.className = 'target-measure-text-label'; // Nueva clase para el estilo del texto
+            targetMeasureTextLabel.className = 'target-measure-text-label';
             targetMeasureTextLabel.textContent = `Referencia: Ancho ${targetWidthMM.toFixed(1)} mm, Alto ${targetHeightMM.toFixed(1)} mm`;
             
             targetVisualContainer.appendChild(targetMeasureTextLabel);
             
-            wrapper.appendChild(targetVisualContainer); // Añadir el contenedor (visual + texto) al wrapper
+            wrapper.appendChild(targetVisualContainer);
         }
 
-        // Función para cerrar sesión (AGREGA ESTO AL FINAL DE TU SCRIPT)
+        // Función para cerrar sesión
         function logout() {
-            sessionStorage.removeItem('loggedIn'); // Elimina la marca de logueado
-            window.location.href = 'login.html'; // Redirige al login
+            sessionStorage.removeItem('loggedIn');
+            window.location.href = 'login.html';
         }
     </script>
+
+    <div class="container">
+        <div class="panel">
+            <h2>Gestionar Pantallas Personalizadas</h2>
+            <label for="manageScreenModelSelect">Seleccionar Pantalla:</label>
+            <select id="manageScreenModelSelect" onchange="loadScreenForEditing()"></select>
+
+            <label for="editScreenName">Nombre de la Pantalla:</label>
+            <input type="text" id="editScreenName" placeholder="Ej: MiPantalla70">
+
+            <label for="editScreenWidth">Ancho (mm):</label>
+            <input type="number" id="editScreenWidth" step="0.1" placeholder="Ej: 1549.8">
+
+            <label for="editScreenHeight">Alto (mm):</label>
+            <input type="number" id="editScreenHeight" step="0.1" placeholder="Ej: 871.8">
+
+            <button onclick="saveScreen()">Guardar Pantalla</button>
+            <button id="deleteScreenBtn" onclick="deleteSelectedScreen()" class="logout-button" style="display: none;">Eliminar Pantalla</button>
+            <div id="manageScreenMessage" class="info" style="display: none;"></div>
+        </div>
+
+        <div class="panel">
+            <h2>Configurar Pantallas</h2>
+            <label for="screenModel">Modelo de Pantalla:</label>
+            <select id="screenModel"></select>
+
+            <label for="rows">Filas:</label>
+            <input type="number" id="rows" value="1" min="1">
+
+            <label for="cols">Columnas:</label>
+            <input type="number" id="cols" value="1" min="1">
+
+            <label for="orientation">Orientación:</label>
+            <select id="orientation">
+                <option value="horizontal">Horizontal</option>
+                <option value="vertical">Vertical</option>
+            </select>
+
+            <button onclick="drawConfiguration()">Dibujar Configuración</button>
+            <button onclick="clearDrawing()">Limpiar Dibujo</button>
+            <p id="dimensionsDisplay"></p>
+        </div>
+
+        <div class="panel">
+            <h2>Visualización y Comparación</h2>
+            <div id="drawingArea">
+                <p class="info">Selecciona una configuración y haz clic en "Dibujar".</p>
+            </div>
+
+            <h3>Comparar con Medida de Referencia</h3>
+            <label for="compareMeasureWidth">Ancho de Referencia (metros):</label>
+            <input type="number" id="compareMeasureWidth" step="0.001" placeholder="Ej: 3.5">
+
+            <label for="compareMeasureHeight">Alto de Referencia (metros):</label>
+            <input type="number" id="compareMeasureHeight" step="0.001" placeholder="Ej: 2.1">
+            
+            <label for="comparisonType">Tipo de Comparación:</label>
+            <select id="comparisonType">
+                <option value="all">Todas las Configuraciones</option>
+                <option value="single">Solo Pantallas Individuales</option>
+                <option value="videowall">Solo Video Walls</option>
+            </select>
+
+            <button onclick="compareConfigurations()">Comparar</button>
+            <div id="comparisonResult" class="comparison-result" style="display: none;"></div>
+            <div id="comparisonError" class="error" style="display: none;"></div>
+        </div>
+
+        <div class="panel">
+            <h2>Gestión de Sesión</h2>
+            <button onclick="logout()" class="logout-button">Cerrar Sesión</button>
+        </div>
+    </div>
+
 </body>
 </html>
