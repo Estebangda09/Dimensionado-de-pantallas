@@ -113,7 +113,8 @@
             border: 1px solid #343a40;
             position: relative;
         }
-       
+        /* Eliminar estilos de etiquetas superpuestas */
+        /* .dimensions-label, .width-label, .height-label, .comparison-label ya no son necesarios en el CSS */
         .comparison-result {
             margin-top: 20px;
             padding: 15px;
@@ -158,7 +159,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin: 10px; 
+            margin: 10px; /* Separación entre elementos en el wrapper */
         }
         .target-measure-text-label {
             text-align: center;
@@ -166,103 +167,36 @@
             font-weight: bold;
             color: #0056b3;
         }
+        /* Estilo para el botón de cerrar sesión */
+        .logout-button {
+            background-color: #dc3545; /* Color rojo para cerrar sesión */
+            margin-top: 20px;
+        }
+        .logout-button:hover {
+            background-color: #c82333;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="panel">
-            <h2>Gestionar Modelos de Pantalla</h2>
-            <label for="manageScreenModelSelect">Seleccionar Modelo:</label>
-            <select id="manageScreenModelSelect" onchange="loadScreenForEditing()">
-                <option value="">-- Seleccionar o Agregar Nuevo --</option>
-                </select>
-
-            <label for="editScreenName">Nombre de Pantalla:</label>
-            <input type="text" id="editScreenName" placeholder="Ej: Mi Pantalla Personalizada">
-
-            <label for="editScreenWidth">Ancho (mm):</label>
-            <input type="number" id="editScreenWidth" placeholder="Ej: 1500">
-
-            <label for="editScreenHeight">Alto (mm):</label>
-            <input type="number" id="editScreenHeight" placeholder="Ej: 800">
-
-            <button onclick="saveScreen()">Guardar/Agregar Pantalla</button>
-            <button onclick="deleteSelectedScreen()" id="deleteScreenBtn" style="background-color: #dc3545; display:none;">Eliminar Pantalla</button>
-            <div id="manageScreenMessage" class="info" style="display:none;"></div>
-        </div>
-
-        <div class="panel">
-            <h2>Configurar Pantallas Existentes</h2>
-            <label for="screenModel">Modelo de Pantalla:</label>
-            <select id="screenModel">
-                </select>
-
-            <div class="grid-controls">
-                <label for="rows">Filas:</label>
-                <input type="number" id="rows" value="1" min="1" max="10" style="width: 60px;">
-                <span>x</span>
-                <label for="cols">Columnas:</label>
-                <input type="number" id="cols" value="1" min="1" max="10" style="width: 60px;">
-            </div>
-
-            <label for="orientation">Orientación de Pantalla Individual:</label>
-            <select id="orientation">
-                <option value="horizontal">Horizontal</option>
-                <option value="vertical">Vertical</option>
-            </select>
-
-            <button onclick="drawConfiguration()">Dibujar Configuración</button>
-            <button onclick="clearDrawing()">Limpiar Dibujo</button>
-        </div>
-
-        <div class="panel">
-            <h2>Comparar con Medida</h2>
-            <label for="compareMeasureWidth">Ancho a Comparar (metros - m):</label>
-            <input type="number" id="compareMeasureWidth" step="0.001" placeholder="Ej: 2.198">
-
-            <label for="compareMeasureHeight">Alto a Comparar (metros - m):</label>
-            <input type="number" id="compareMeasureHeight" step="0.001" placeholder="Ej: 1.253">
-            
-            <label for="comparisonType">Tipo de Comparación:</label>
-            <select id="comparisonType">
-                <option value="all">Cualquier Configuración (Pantalla Única o Video Wall)</option>
-                <option value="single">Pantalla Única</option>
-                <option value="videowall">Video Wall (Matriz)</option>
-            </select>
-
-            <button onclick="compareConfigurations()">Comparar</button>
-            <div id="comparisonResult" class="comparison-result" style="display:none;"></div>
-            <div id="comparisonError" class="error" style="display:none;"></div>
-        </div>
-
-        <div class="panel" style="flex-grow: 2;">
-            <h2>Dibujo de la Configuración</h2>
-            <div id="drawingArea">
-                <p class="info">Selecciona una configuración y haz clic en "Dibujar".</p>
-            </div>
-            <div id="dimensionsDisplay" style="margin-top: 10px; font-weight: bold;"></div>
-        </div>
-    </div>
-
     <script>
+        // LÓGICA DE VERIFICACIÓN DE SESIÓN (AGREGAR ESTO AL PRINCIPIO DEL SCRIPT)
+        if (sessionStorage.getItem('loggedIn') !== 'true') {
+            window.location.href = 'login.html'; // Redirige al login si no está logueado
+        }
+        // --- FIN LÓGICA DE VERIFICACIÓN DE SESIÓN ---
+
         const MM_TO_INCH = 25.4;
 
         let screensData = {
-                '43 UL3J': { width: 967, height: 564, depth: 57.1, isCustom: false },
-                '50 UL3J': { width: 1128, height: 649, depth: 57.1, isCustom: false },
-                '55 UL3J': { width: 1244, height: 721, depth: 57.5, isCustom: false },
-                '65 UL3J': { width: 1457, height: 838, depth: 57.5, isCustom: false },
-                '75 UL3J': { width: 1683, height: 960, depth: 57.5, isCustom: false },
-                '86 UL3J"': { width: 1927, height: 1104, depth: 59.9, isCustom: false },
-                '43 UH5F': { width: 962.5, height: 568, depth: 39.9, isCustom: false },
-                '49 UH5F': { width: 1098.6, height: 644.5, depth: 39.9, isCustom: false },
-                '55 UH5F': { width: 1234.4, height: 720.9, depth: 39.9, isCustom: false },
-                '65 UH5F': { width: 1453.3 , height: 844, depth: 39.9, isCustom: false },
-                '75 UH5J"': { width: 1682.4, height: 960.3, depth: 57.9, isCustom: false },
-                '86 UH5J"': { width: 1926.2, height: 1097.2, depth: 60.6, isCustom: false },
-                '98 UH5F': { width: 2191.8 , height: 1246.8, depth: 69.4, isCustom: false },                
-                '98 UM5K"': { width: 2198, height: 1253, depth: 79.5, isCustom: false },
-                '110 UM5K"': { width: 2474, height: 1408, depth: 99, isCustom: false }
+            '49"': { width: 1077.6, height: 607.8, depth: 89.7, isCustom: false },
+            '55"': { width: 1212.2, height: 683.0, depth: 86.9, isCustom: false },
+            '75"': { width: 1682.4, height: 960.3, depth: 57.9, isCustom: false },
+            '86"': { width: 1926.2, height: 1097.2, depth: 60.6, isCustom: false },
+            '98"': { width: 2198, height: 1253, depth: 79.5, isCustom: false },
+            '110"': { width: 2474, height: 1408, depth: 99, isCustom: false }
+            // Puedes agregar aquí más pantallas personalizadas por defecto para que todos las vean
+            // Ejemplo:
+            // 'Mi_Pantalla_Custom_Fija': { width: 1000, height: 500, depth: 40, isCustom: false } 
         };
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -287,26 +221,23 @@
         function loadScreensFromLocalStorage() {
             const storedData = localStorage.getItem('allScreensData');
             const defaultScreens = {
-                '43 UL3J': { width: 967, height: 564, depth: 57.1, isCustom: false },
-                '50 UL3J': { width: 1128, height: 649, depth: 57.1, isCustom: false },
-                '55 UL3J': { width: 1244, height: 721, depth: 57.5, isCustom: false },
-                '65 UL3J': { width: 1457, height: 838, depth: 57.5, isCustom: false },
-                '75 UL3J': { width: 1683, height: 960, depth: 57.5, isCustom: false },
-                '86 UL3J"': { width: 1927, height: 1104, depth: 59.9, isCustom: false },
-                '43 UH5F': { width: 962.5, height: 568, depth: 39.9, isCustom: false },
-                '49 UH5F': { width: 1098.6, height: 644.5, depth: 39.9, isCustom: false },
-                '55 UH5F': { width: 1234.4, height: 720.9, depth: 39.9, isCustom: false },
-                '65 UH5F': { width: 1453.3 , height: 844, depth: 39.9, isCustom: false },
-                '75 UH5J"': { width: 1682.4, height: 960.3, depth: 57.9, isCustom: false },
-                '86 UH5J"': { width: 1926.2, height: 1097.2, depth: 60.6, isCustom: false },
-                '98 UH5F': { width: 2191.8 , height: 1246.8, depth: 69.4, isCustom: false },                
-                '98 UM5K"': { width: 2198, height: 1253, depth: 79.5, isCustom: false },
-                '110 UM5K"': { width: 2474, height: 1408, depth: 99, isCustom: false }
+                '49"': { width: 1077.6, height: 607.8, depth: 89.7, isCustom: false },
+                '55"': { width: 1212.2, height: 683.0, depth: 86.9, isCustom: false },
+                '75"': { width: 1682.4, height: 960.3, depth: 57.9, isCustom: false },
+                '86"': { width: 1926.2, height: 1097.2, depth: 60.6, isCustom: false },
+                '98"': { width: 2198, height: 1253, depth: 79.5, isCustom: false },
+                '110"': { width: 2474, height: 1408, depth: 99, isCustom: false },
+                // Aquí puedes añadir pantallas personalizadas que quieres que TODOS los usuarios vean
+                // Ej: 'Pantalla_Personalizada_Global': { width: 1500, height: 800, depth: 50, isCustom: false }
+                // Si pones isCustom: true, se comportará como una que el usuario puede editar/eliminar.
+                // Si pones isCustom: false, será como una pantalla de stock.
             };
 
             if (storedData) {
                 try {
                     const parsedData = JSON.parse(storedData);
+                    // Combina las pantallas predeterminadas con las guardadas localmente.
+                    // Las locales sobrescriben las predeterminadas si hay un mismo nombre.
                     screensData = { ...defaultScreens, ...parsedData };
                 } catch (e) {
                     console.error("Error parsing stored data from localStorage:", e);
@@ -786,6 +717,12 @@
             targetVisualContainer.appendChild(targetMeasureTextLabel);
             
             wrapper.appendChild(targetVisualContainer); // Añadir el contenedor (visual + texto) al wrapper
+        }
+
+        // Función para cerrar sesión (AGREGA ESTO AL FINAL DE TU SCRIPT)
+        function logout() {
+            sessionStorage.removeItem('loggedIn'); // Elimina la marca de logueado
+            window.location.href = 'login.html'; // Redirige al login
         }
     </script>
 </body>
